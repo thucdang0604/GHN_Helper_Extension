@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "GHN Helper Pro",
+  "version": "1.2",
+  "description": "Quản lý và phân loại đơn hàng GHN",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "notifications",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "https://*.ghn.vn/*",
+    "https://noibo.ghn.vn/*",
+    "https://nhanh.ghn.vn/*",
+    "https://nhanh-api.ghn.vn/*",
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*",
+    "https://api.github.com/*",
+    "https://raw.githubusercontent.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.ghn.vn/*",
+        "*://nhanh.ghn.vn/*"
+      ],
+      "js": [
+        "src/core/ConfigManager.js",
+        "src/features/OrderInfo.js",
+        "src/features/HideReceipt.js",
+        "src/features/BulkDelete.js",
+        "src/features/AutoPacking.js",
+        "src/features/OrderChecker.js",
+        "src/features/PackageAlert.js",
+        "src/features/TicketAlert.js",
+        "src/features/AutoPrint.js",
+        "src/features/BulkAssign.js",
+        "src/features/AutoUnpackComplete.js",
+        "src/features/AutoCloseModal.js",
+        "src/features/AutoScanStatus.js",
+        "src/features/TripPriceCollector.js",
+        "src/features/BulkReceiverInfo.js",
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject.js",
+        "assets/sounds/*.mp3"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

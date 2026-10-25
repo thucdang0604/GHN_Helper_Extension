@@ -1,0 +1,514 @@
+// ============================================================================
+// HÀM KIỂM TRA PHIÊN BẢN: Mở link Webhook trên trình duyệt sẽ thấy thông báo này
+// ============================================================================
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "ok",
+    version: "v9-ultra-fast-batch-sync",
+    message: "Google Apps Script v9: Tối ưu Batch Update cực nhanh (chỉ 1 lần ghi setValues), bảo toàn SĐT số 0 dạng text thuần, tự động nhận diện/tạo cột Địa Chỉ."
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================================
+// HÀM CHUẨN HÓA SỐ ĐIỆN THOẠI
+// Trả về chuỗi SĐT sạch (ví dụ: "0933669336") - KHÔNG thêm dấu ' vào đầu.
+// Việc giữ số 0 được đảm bảo bằng setNumberFormat('@') trước khi ghi.
+// ============================================================================
+function formatPhoneNumber(phone) {
+  if (phone === undefined || phone === null || phone === '') return '';
+  var str = String(phone).trim();
+  
+  // Loại bỏ các dấu nháy đơn hoặc nháy kép ở đầu nếu đã có sẵn
+  str = str.replace(/^['\"]+/, '').trim();
+  if (!str) return '';
+
+  // Xóa bỏ khoảng trắng, dấu chấm, dấu gạch nối thường gặp trong SĐT
+  var clean = str.replace(/[\s\.\-\(\)]/g, '');
+
+  // Xử lý đầu số quốc tế (+84 hoặc 84) đưa về số 0 chuẩn
+  if (clean.indexOf('+84') === 0) {
+    clean = '0' + clean.substring(3);
+  } else if (clean.indexOf('84') === 0 && clean.length >= 11) {
+    clean = '0' + clean.substring(2);
+  }
+
+  // Nếu số điện thoại chỉ còn 9 hoặc 10 chữ số (bị mất số 0 đầu trước đó) -> bù thêm số 0
+  if (/^[1-9]\d{8,9}$/.test(clean)) {
+    clean = '0' + clean;
+  }
+
+  // Trả về chuỗi SĐT sạch, KHÔNG có dấu ' ở đầu
+  return clean;
+}
+
+// ============================================================================
+// HÀM TIẾP NHẬN DỮ LIỆU TỪ EXTENSION (POST)
+// ============================================================================
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    var items = Array.isArray(data) ? data : [data];
+    
+    // --- 1. LỆNH CẬP NHẬT GIÁ (UPDATE_PRICE) ---
+    var priceItems = items.filter(function(item) { return item.action === 'UPDATE_PRICE'; });
+    if (priceItems.length > 0) {
+      return handleUpdatePrice(sheet, priceItems);
+    }
+
+    // --- 2. LỆNH CẬP NHẬT TÊN & SĐT (UPDATE_RECEIVER_INFO) ---
+    var receiverItems = items.filter(function(item) { 
+      return item.action === 'UPDATE_RECEIVER_INFO' || item.receiverPhone !== undefined; 
+    });
+    if (receiverItems.length > 0) {
+      // Tìm đúng dòng cũ để điền (TUYỆT ĐỐI KHÔNG TẠO DÒNG MỚI)
+      return handleUpdateReceiverInfo(sheet, receiverItems);
+    }
+    
+    // --- 3. LỆNH GÁN ĐƠN MỚI TỪ HỆ THỐNG GHN (Chỉ chạy khi thêm đơn mới) ---
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Thời Gian Ghi Nhận", "Mã Đơn Hàng", "Mã Chuyến", "Mã Túi",
+        "Tên Người Nhận", "Số Điện Thoại", "Trọng Lượng", "Giá Trị",
+        "Trạng Thái", "Lý Do Không Đạt", "Hub Đích"
+      ]);
+    }
+    
+    // Tối ưu ghi theo Batch (setValues 1 lần) thay vì appendRow từng dòng trong vòng lặp
+    var newRows = items.map(function(item) {
+      var rawPhone = item.contactPhone || item.receiverPhone || "";
+      var phone = formatPhoneNumber(rawPhone);
+      
+      return [
+        new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }),
+        item.orderCode || "",
+        item.tripCode || "",
+        item.bagCode || "",
+        item.contactName || item.receiverName || "",
+        phone,
+        item.weight || "",
+        item.codAmount || "",
+        item.status || "",
+        item.failedReason || "",
+        item.hubName || ""
+      ];
+    });
+
+    if (newRows.length > 0) {
+      var startRow = sheet.getLastRow() + 1;
+      
+      // ĐẶT FORMAT PLAIN TEXT (@) CHO CỘT SĐT **TRƯỚC** KHI GHI DỮ LIỆU
+      // Nếu ghi trước rồi mới format → số 0 đầu đã bị mất rồi, format sau vô ích
+      // Bước 1: Đảm bảo dòng mới tồn tại (chèn đủ dòng trống nếu cần)
+      var phoneColRange = sheet.getRange(startRow, 6, newRows.length, 1);
+      phoneColRange.clearContent();       // Xóa trắng, phá kiểu dữ liệu cũ nếu có
+      phoneColRange.setNumberFormat('@'); // Format Text thuần
+      SpreadsheetApp.flush();             // Ép Sheets áp dụng format TRƯỚC khi ghi giá trị
+      
+      // Giờ mới ghi dữ liệu - cột 6 đã là Text nên "0933..." sẽ được giữ nguyên
+      sheet.getRange(startRow, 1, newRows.length, newRows[0].length).setValues(newRows);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", count: newRows.length }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ============================================================================
+// HÀM TÌM DÒNG CŨ ĐỂ ĐIỀN TÊN, SĐT & ĐỊA CHỈ - KHÔNG TẠO DÒNG MỚI
+// Chiến lược: Tối ưu Batch Update cực nhanh (đọc & ghi 1 lần setValues theo dải ảnh hưởng)
+// Bảo toàn 100% số 0 đầu cho SĐT bằng getDisplayValues & format '@', không đụng dòng ngoài dải
+// ============================================================================
+function handleUpdateReceiverInfo(sheet, receiverItems) {
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return ContentService.createTextOutput(JSON.stringify({ 
+      status: "success", updated: 0, message: "Sheet chưa có dữ liệu" 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Tự động quét tiêu đề Dòng 1 để nhận diện đúng cột
+  var lastCol = Math.max(sheet.getLastColumn(), 15);
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  
+  var colOrder = 2; // Mặc định Cột B
+  var colName = -1;
+  var colPhone = -1;
+  var colAddress = -1;
+
+  for (var c = 0; c < headers.length; c++) {
+    var h = String(headers[c] || '').toLowerCase().trim();
+    if (h.includes('mã đơn') || h.includes('ordercode')) {
+      colOrder = c + 1;
+    } else if (h.includes('tên') || h.includes('người nhận') || h.includes('contactname')) {
+      colName = c + 1;
+    } else if (h.includes('điện thoại') || h.includes('sđt') || h.includes('phone')) {
+      colPhone = c + 1;
+    } else if (h.includes('địa chỉ') || h.includes('diachi') || h.includes('address')) {
+      colAddress = c + 1;
+    }
+  }
+
+  // Nhận diện theo vị trí mặc định nếu tiêu đề không có từ khóa
+  if (colName === -1) {
+    colName = (headers.length >= 4 && String(headers[3] || '').toLowerCase().includes('túi')) ? 5 : 4;
+  }
+  if (colPhone === -1) {
+    colPhone = colName + 1; // SĐT nằm ngay sau cột Tên
+  }
+
+  // Tự động tạo cột "Địa Chỉ" vào cuối nếu chưa có và có dữ liệu địa chỉ gửi lên
+  var hasAddressData = receiverItems.some(function(item) {
+    return !!(item.address && String(item.address).trim());
+  });
+  if (colAddress === -1 && hasAddressData) {
+    var actualLastCol = sheet.getLastColumn();
+    colAddress = actualLastCol + 1;
+    sheet.getRange(1, colAddress).setValue("Địa Chỉ");
+  }
+
+  var numRows = lastRow - 1;
+
+  // Đọc dữ liệu cột Mã Đơn (1 lần đọc duy nhất)
+  var orderData = sheet.getRange(2, colOrder, numRows, 1).getValues();
+
+  // Tạo map tra cứu nhanh (Mã đơn -> các chỉ số dòng)
+  var codeMap = {};
+  var baseCodeMap = {};
+  for (var i = 0; i < orderData.length; i++) {
+    var oCode = String(orderData[i][0] || '').trim().toUpperCase();
+    if (oCode) {
+      if (!codeMap[oCode]) codeMap[oCode] = [];
+      codeMap[oCode].push(i);
+
+      var bCode = oCode.replace(/-[\d\.]+$/, '').replace(/\.[0-9]+$/, '');
+      if (bCode && bCode !== oCode) {
+        if (!baseCodeMap[bCode]) baseCodeMap[bCode] = [];
+        baseCodeMap[bCode].push(i);
+      }
+    }
+  }
+
+  var matchedIndices = [];
+  var matchedSet = {};
+  var notFoundCodes = [];
+  var updatedCount = 0;
+  var itemUpdates = [];
+
+  receiverItems.forEach(function(item) {
+    var oCode = String(item.orderCode || '').trim().toUpperCase();
+    if (!oCode) return;
+
+    var name = String(item.receiverName || item.contactName || '').trim();
+    var rawPhone = item.receiverPhone !== undefined ? item.receiverPhone : (item.contactPhone !== undefined ? item.contactPhone : '');
+    var phone = formatPhoneNumber(rawPhone);
+    var address = String(item.address || '').trim();
+
+    // Hỗ trợ tìm kiếm thông minh: mã đầy đủ hoặc mã gốc
+    var bCode = oCode.replace(/-[\d\.]+$/, '').replace(/\.[0-9]+$/, '');
+    var rowIndices = codeMap[oCode] || baseCodeMap[oCode] || (bCode !== oCode ? (codeMap[bCode] || baseCodeMap[bCode]) : null);
+
+    if (rowIndices && rowIndices.length > 0) {
+      rowIndices.forEach(function(idx) {
+        itemUpdates.push({
+          idx: idx,
+          name: name,
+          phone: phone,
+          address: address
+        });
+        if (!matchedSet[idx]) {
+          matchedSet[idx] = true;
+          matchedIndices.push(idx);
+        }
+      });
+      updatedCount++;
+    } else {
+      notFoundCodes.push(oCode);
+    }
+  });
+
+  if (matchedIndices.length === 0) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      updated: 0,
+      total: receiverItems.length,
+      notFound: notFoundCodes.length,
+      notFoundCodes: notFoundCodes
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // ==========================================================================
+  // TỐI ƯU HÓA BATCH WRITE:
+  // Xác định khoảng dòng bị ảnh hưởng [minIdx, maxIdx]
+  // Chỉ đọc & ghi đúng phạm vi đó bằng 1 lệnh setValues duy nhất cho mỗi cột
+  // ==========================================================================
+  var minIdx = matchedIndices[0];
+  var maxIdx = matchedIndices[0];
+  for (var m = 1; m < matchedIndices.length; m++) {
+    if (matchedIndices[m] < minIdx) minIdx = matchedIndices[m];
+    if (matchedIndices[m] > maxIdx) maxIdx = matchedIndices[m];
+  }
+
+  var sliceStartRow = minIdx + 2; // Dòng bắt đầu trên Sheet (+2 vì header là dòng 1, index từ 0)
+  var sliceNumRows = maxIdx - minIdx + 1;
+
+  var nameRange = (colName !== -1) ? sheet.getRange(sliceStartRow, colName, sliceNumRows, 1) : null;
+  var nameValues = nameRange ? nameRange.getValues() : null;
+
+  var phoneRange = (colPhone !== -1) ? sheet.getRange(sliceStartRow, colPhone, sliceNumRows, 1) : null;
+  // Dùng getDisplayValues() để giữ nguyên vẹn chuỗi hiển thị SĐT cũ, không bị ép kiểu về Number
+  var phoneValues = phoneRange ? phoneRange.getDisplayValues() : null;
+
+  var addressRange = (colAddress !== -1) ? sheet.getRange(sliceStartRow, colAddress, sliceNumRows, 1) : null;
+  var addressValues = addressRange ? addressRange.getValues() : null;
+
+  var nameChanged = false;
+  var phoneChanged = false;
+  var addressChanged = false;
+
+  // Cập nhật các ô trong bộ nhớ RAM
+  itemUpdates.forEach(function(u) {
+    var relIdx = u.idx - minIdx;
+
+    if (u.name && nameValues) {
+      nameValues[relIdx][0] = u.name;
+      nameChanged = true;
+    }
+    if (u.phone && phoneValues) {
+      phoneValues[relIdx][0] = u.phone;
+      phoneChanged = true;
+    }
+    if (u.address && addressValues) {
+      addressValues[relIdx][0] = u.address;
+      addressChanged = true;
+    }
+  });
+
+  // Ghi đồng loạt (Batch Write) - Chỉ 1 lệnh setValues duy nhất cho mỗi cột thay đổi
+  if (nameRange && nameChanged) {
+    nameRange.setValues(nameValues);
+  }
+  if (phoneRange && phoneChanged) {
+    // ⚠️ QUAN TRỌNG: Phải xóa trắng → format '@' → flush → ghi giá trị
+    // Nếu không flush giữa format và ghi, Sheets có thể ép kiểu số trước khi format được áp dụng → mất số 0 đầu
+    phoneRange.clearContent();
+    phoneRange.setNumberFormat('@');
+    SpreadsheetApp.flush();
+    phoneRange.setValues(phoneValues);
+  }
+  if (addressRange && addressChanged) {
+    addressRange.setValues(addressValues);
+  }
+
+  SpreadsheetApp.flush();
+
+  var result = {
+    status: "success",
+    updated: updatedCount,
+    total: receiverItems.length,
+    notFound: notFoundCodes.length,
+    notFoundCodes: notFoundCodes
+  };
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================================
+// HÀM CẬP NHẬT GIÁ (UPDATE_PRICE)
+// ============================================================================
+function handleUpdatePrice(sheet, priceItems) {
+  var ORDER_CODE_COL = 2;   // Cột B = Mã Đơn Hàng
+  var TRIP_CODE_COL  = 3;   // Cột C = Mã Chuyến Đi
+  var PHAI_THU_COL   = 12;  // Cột L = Phải Thu
+  var GTB_THU_COL    = 13;  // Cột M = GTB-Thu
+  
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", updated: 0, message: "Sheet trống" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  var maxCols = sheet.getMaxColumns();
+  if (maxCols < GTB_THU_COL) {
+    sheet.insertColumnsAfter(maxCols, GTB_THU_COL - maxCols);
+  }
+
+  var headerValues = sheet.getRange(1, PHAI_THU_COL, 1, 2).getValues()[0];
+  if (!headerValues[0]) sheet.getRange(1, PHAI_THU_COL).setValue("Phải Thu");
+  if (!headerValues[1]) sheet.getRange(1, GTB_THU_COL).setValue("GTB-Thu");
+  
+  var numRows = lastRow - 1;
+  var orderData = sheet.getRange(2, ORDER_CODE_COL, numRows, 2).getValues();
+  var priceRange = sheet.getRange(2, PHAI_THU_COL, numRows, 2);
+  var priceValues = priceRange.getValues();
+
+  var exactMap = {};
+  var codeOnlyMap = {};
+
+  for (var i = 0; i < orderData.length; i++) {
+    var oCode = String(orderData[i][0] || '').trim();
+    var tCode = String(orderData[i][1] || '').trim();
+    if (oCode) {
+      exactMap[oCode + "_" + tCode] = i;
+      codeOnlyMap[oCode] = i;
+    }
+  }
+  
+  var updatedCount = 0;
+  var notFoundCodes = [];
+  
+  priceItems.forEach(function(item) {
+    var oCode = String(item.orderCode || '').trim();
+    var tCode = String(item.tripCode || '').trim();
+    if (!oCode) return;
+
+    var idx = -1;
+    if (tCode && exactMap.hasOwnProperty(oCode + "_" + tCode)) {
+      idx = exactMap[oCode + "_" + tCode];
+    } else if (codeOnlyMap.hasOwnProperty(oCode)) {
+      idx = codeOnlyMap[oCode];
+    }
+
+    if (idx !== -1) {
+      priceValues[idx][0] = Number(item.phaiThu) || 0;
+      priceValues[idx][1] = Number(item.gtbThu) || 0;
+      updatedCount++;
+    } else {
+      notFoundCodes.push(oCode);
+    }
+  });
+  
+  priceRange.setValues(priceValues);
+  
+  var result = {
+    status: "success",
+    updated: updatedCount,
+    total: priceItems.length,
+    notFound: notFoundCodes.length
+  };
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================================
+// TIỆN ÍCH PHỤ: HÀM SỬA TOÀN BỘ SĐT ĐÃ CÓ TRÊN SHEET BỊ MẤT SỐ 0
+// (CHẠY TRỰC TIẾP TRÊN APPS SCRIPT EDITOR ĐỂ SỬA DỮ LIỆU CŨ)
+// ============================================================================
+function fixAllPhoneNumbersInSheet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    Logger.log("Sheet chưa có dữ liệu (chỉ có header hoặc trống)");
+    return;
+  }
+
+  var lastCol = Math.max(sheet.getLastColumn(), 15);
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var colPhone = -1;
+
+  // Log toàn bộ tiêu đề để debug
+  Logger.log("=== TIÊU ĐỀ CÁC CỘT ===");
+  for (var c = 0; c < headers.length; c++) {
+    var headerVal = String(headers[c] || '').trim();
+    if (headerVal) {
+      Logger.log("Cột " + String.fromCharCode(65 + c) + " (index " + (c+1) + "): \"" + headerVal + "\"");
+    }
+  }
+
+  // Tìm cột Tên (để suy ra cột SĐT = Tên + 1)
+  var colName = -1;
+  
+  for (var c = 0; c < headers.length; c++) {
+    var h = String(headers[c] || '').toLowerCase().trim();
+    if (h.includes('điện thoại') || h.includes('sđt') || h.includes('phone')) {
+      colPhone = c + 1;
+    } else if (h.includes('tên') || h.includes('người nhận') || h.includes('contactname')) {
+      colName = c + 1;
+    }
+  }
+  
+  // Nếu không tìm thấy cột SĐT qua tiêu đề, suy ra từ cột Tên
+  if (colPhone === -1 && colName !== -1) {
+    colPhone = colName + 1;
+    Logger.log("⚠️ Không tìm thấy tiêu đề SĐT, suy ra từ cột Tên: SĐT = cột " + String.fromCharCode(64 + colPhone));
+  }
+  
+  if (colPhone === -1) {
+    // Thử tìm cột có dữ liệu toàn số (9-11 chữ số) - khả năng cao là cột SĐT
+    for (var c = 0; c < headers.length; c++) {
+      var sampleVal = String(sheet.getRange(2, c + 1).getValue() || '');
+      if (/^\d{9,11}$/.test(sampleVal) || /^'?\d{9,11}$/.test(sampleVal)) {
+        colPhone = c + 1;
+        Logger.log("⚠️ Phát hiện cột " + String.fromCharCode(64 + colPhone) + " có dữ liệu dạng SĐT");
+        break;
+      }
+    }
+  }
+  
+  if (colPhone === -1) {
+    colPhone = 5; // Mặc định cột E (5) thay vì F (6)
+    Logger.log("⚠️ Không phát hiện cột SĐT, dùng mặc định cột E (5)");
+  } else {
+    Logger.log("✅ Phát hiện cột SĐT: Cột " + String.fromCharCode(64 + colPhone) + " (index " + colPhone + ")");
+  }
+
+  var numRows = lastRow - 1;
+  var phoneRange = sheet.getRange(2, colPhone, numRows, 1);
+  
+  // 1. ĐỌC GIÁ TRỊ HIỆN TẠI
+  var rawValues = phoneRange.getValues();
+  
+  // Log 5 giá trị mẫu TRƯỚC khi sửa
+  Logger.log("=== GIÁ TRỊ MẪU TRƯỚC KHI SỬA (5 dòng đầu) ===");
+  for (var s = 0; s < Math.min(5, rawValues.length); s++) {
+    var v = rawValues[s][0];
+    Logger.log("Dòng " + (s+2) + ": giá trị = " + JSON.stringify(v) + " | kiểu = " + typeof v);
+  }
+  
+  // 2. CHUẨN HÓA TỪNG GIÁ TRỊ
+  var fixedValues = [];
+  var fixedCount = 0;
+  for (var i = 0; i < rawValues.length; i++) {
+    var val = rawValues[i][0];
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      var fixed = formatPhoneNumber(val);
+      fixedValues.push([fixed]);
+      if (String(val) !== fixed) fixedCount++;
+    } else {
+      fixedValues.push(['']);
+    }
+  }
+  
+  Logger.log("Số ô cần sửa: " + fixedCount + " / " + numRows);
+  
+  // Log 5 giá trị mẫu SAU khi format
+  Logger.log("=== GIÁ TRỊ MẪU SAU KHI FORMAT (5 dòng đầu) ===");
+  for (var s = 0; s < Math.min(5, fixedValues.length); s++) {
+    Logger.log("Dòng " + (s+2) + ": giá trị = " + JSON.stringify(fixedValues[s][0]) + " | kiểu = " + typeof fixedValues[s][0]);
+  }
+
+  // 3. XÓA TRẮNG NỘI DUNG CỘT SĐT (phá bỏ hoàn toàn kiểu Number cũ)
+  phoneRange.clearContent();
+  SpreadsheetApp.flush();
+  
+  // 4. ĐẶT FORMAT PLAIN TEXT (@)
+  try {
+    sheet.getRange(1, colPhone, sheet.getMaxRows(), 1).setNumberFormat('@');
+  } catch (e) {
+    phoneRange.setNumberFormat('@');
+  }
+  SpreadsheetApp.flush();
+  
+  // 5. GHI LẠI GIÁ TRỊ ĐÃ CHUẨN HÓA (ô đã trống + format @, sẽ lưu đúng dạng text)
+  phoneRange.setValues(fixedValues);
+  
+  Logger.log("✅ HOÀN TẤT! Đã chuẩn hóa SĐT cho " + numRows + " dòng tại cột " + String.fromCharCode(64 + colPhone) + "!");
+  Logger.log("Kiểm tra lại Sheet để xác nhận số 0 đầu đã được phục hồi.");
+}
+

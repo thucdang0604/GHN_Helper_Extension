@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổng hợp Đóng góp EES 2026 - GHN</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        h1 {
+            color: #F26522;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 2px solid #F26522;
+            padding-bottom: 10px;
+        }
+
+        .intro {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-left: 5px solid #F26522;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            color: #0056b3;
+            margin-top: 0;
+            font-size: 1.3em;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 15px;
+            color: #d9534f;
+            font-size: 1.1em;
+        }
+
+        .section-content {
+            font-weight: bold;
+            margin-top: 15px;
+            color: #5cb85c;
+            font-size: 1.1em;
+        }
+
+        ul {
+            margin-top: 8px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .btn-download {
+            display: inline-block;
+            background-color: #24292e;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+        .btn-download:hover {
+            background-color: #0366d6;
+        }
+        .header-actions {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Tổng Hợp Ý Kiến Đóng Góp - EES 2026</h1>
+    
+    <div class="header-actions">
+        <a href="https://github.com/lemyngoc24415/extention_GHN" target="_blank" class="btn-download">
+            📦 Chuyển đến GitHub để tải Extension GHN Helper
+        </a>
+    </div>
+
+    <p class="intro">Dữ liệu tổng hợp nhằm mục đích cung cấp thông tin thực tế giúp Ban lãnh đạo cải thiện công cụ, quy
+        trình làm việc và chính sách phù hợp.</p>
+
+    <!-- Vấn đề 1 -->
+    <div class="card">
+        <h2>1. Vấn đề Chính sách thưởng KPI & Tỷ lệ GTC (Nhóm 1A - NV Giao nhận)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li><strong>Đơn TikTok:</strong> Bắt buộc giao/lưu kho đến 5 ngày (hoặc hơn) mới đủ điều kiện chuyển hoàn,
+                dù NV đã biết chắc chắn khách không nhận, gây ảnh hưởng nghiêm trọng đến tỷ lệ Giao Thành Công (GTC).
+            </li>
+            <li><strong>Đơn thường không cho xem hàng/thu tiền:</strong> Khách từ chối nhận lần 1, hệ thống không cho
+                hủy ngay mà bắt chờ lưu kho 3 ngày, sau đó shop lại yêu cầu giao lại (RV) 1 lần nữa dù khách đã kiên
+                quyết không nhận.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Có cơ chế loại trừ các đơn "khách từ chối nhận ngay lần 1" ra khỏi rổ tính tỷ lệ GTC của nhân viên để
+                đảm bảo công bằng.</li>
+            <li>Tối ưu hệ thống cho phép thao tác chuyển hoàn sớm khi có bằng chứng khách kiên quyết từ chối.</li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 2 -->
+    <div class="card">
+        <h2>2. Vấn đề Hiệu năng Ứng dụng - App Tài xế (Nhóm 1A)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li>App phản hồi chậm, gây giật lag trên các máy Android cấu hình tầm trung/thấp khi xử lý từ 70 - 120 đơn
+                hàng.</li>
+            <li>Với nghiệp vụ Lấy hàng (Pickup), khi gán lượng đơn lớn (trên 300 đơn), các tính năng hoạt động rất chậm,
+                làm mất thời gian tại điểm lấy hàng.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Tối ưu hóa dung lượng và hiệu suất của App Tài xế trên hệ điều hành Android. Cải thiện khả năng xử lý dữ
+                liệu hàng loạt (bulk action) để app hoạt động mượt mà hơn.</li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 3 -->
+    <div class="card">
+        <h2>3. Vấn đề Phân quyền & Chia tuyến (Nhóm 2A - NV Vận hành Kho/NVXL)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li>Thiếu Trưởng bưu cục, NVXL phải tự điều phối nhưng không có quyền truy cập thao tác trên trang phân
+                tuyến. Công cụ vẽ bản đồ chia tuyến hiện tại thiếu chính xác, dễ dẫn đến rớt đơn cho NV lastmile.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Mở quyền truy cập cho NVXL cập nhật trên trang phân tuyến theo nhân sự thực tế, trình AM duyệt (Approve)
+                để làm bản đồ chính thức.</li>
+            <li>Bổ sung tính năng định tuyến bằng cách <strong>nhập liệu trực tiếp tên đường và dãy số/số nhà</strong>
+                thay vì chỉ vẽ bản đồ để tăng độ chính xác.</li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 4 -->
+    <div class="card">
+        <h2>4. Tối ưu Giao diện và Tính năng Hệ thống Vận hành (Nhóm 2A - NVXL)</h2>
+        <div class="section-title">🔴 Thực trạng & Đề xuất cụ thể:</div>
+        <ul>
+            <li><span class="highlight">Gán lấy đơn:</span> Chưa hiển thị số lần lấy hàng thất bại. <strong>Đề
+                    xuất:</strong> Bổ sung hiển thị thông tin này để NVXL có phương án điều phối.</li>
+            <li><span class="highlight">Tính năng tự gán trên App:</span> Khi NV mới bật tính năng tự quét, hệ thống bị
+                delay 1 ngày mới sử dụng được. <strong>Đề xuất:</strong> Cần thiết lập để tài khoản mới có thể sử dụng
+                tự quét ngay lập tức.</li>
+            <li><span class="highlight">Nhận hàng tại bưu cục:</span>
+                <ul>
+                    <li>Cần gắn thẻ (tag) rõ ràng dựa trên ID khách gửi (VD: "Shop", "Shopee Trả Hàng", "Tiktok Trả
+                        Hàng").</li>
+                    <li>Hiển thị sẵn kích thước đơn hàng bên ngoài. Cho phép NVXL chủ động xem nội dung sản phẩm bên
+                        trong hệ thống để đánh giá ngoại quan đơn hàng.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 5 -->
+    <div class="card">
+        <h2>5.Bảo mật thao tác Tạo Phiếu Thu Tiền (Nhóm 2A - NVXL)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li>Thao tác tạo phiếu thu tiền trên hệ thống đang thiếu bước xác thực an toàn. Việc này tạo rủi ro nhân sự
+                nội bộ sử dụng ID của người khác để "tích thu" nhằm trốn tránh trách nhiệm tài chính.</li>
+            <li> Hiện tại việc đóng tiền đang hướng đến NVPTTT thao tác trực tiếp trên app tài xế.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Yêu cầu bắt buộc <strong>nhập mã PIN cá nhân</strong> mỗi khi thao tác xác nhận tạo phiếu thu tiền nhằm
+                minh bạch hóa quy trình và ràng buộc chặt chẽ trách nhiệm.</li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 6 -->
+    <div class="card">
+        <h2>6. Xử lý Sự cố "Nhả mã" & Truy vết Đơn hàng Thất lạc (Nhóm 2A - NVXL)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li>Các task yêu cầu nhả mã được tiếp nhận rất lâu. Các đơn bị kẹt ở bước "rã hàng loạt" thường bị treo kéo
+                dài cho đến khi chuyển trạng thái thất lạc.</li>
+            <li>Bưu cục không thể chủ động check cam tìm hàng vì không nắm được ngoại quan thực tế của gói hàng.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Hệ thống cần <strong>đồng bộ hình ảnh gói hàng</strong> (chụp lúc scan đóng kiện) lên nội bộ để các bộ
+                phận biết ngoại quan, khoanh vùng check cam và chủ động tìm thấy hàng trước khi quá hạn.</li>
+            <li>Rút ngắn thời gian tiếp nhận và xử lý các task nhả mã.</li>
+        </ul>
+    </div>
+
+    <!-- Vấn đề 7 MỚI -->
+    <div class="card">
+        <h2>7. Chuẩn hóa Nguồn Thông tin Quy định & Rủi ro Truy thu (Nhóm 2A - NVXL)</h2>
+        <div class="section-title">🔴 Thực trạng:</div>
+        <ul>
+            <li>Hiện tại đang thiếu một nền tảng kiến thức tập trung, chính xác để nhân viên tra cứu các quy định và quy
+                trình hướng dẫn thao tác (SOPs).</li>
+            <li>Nhân viên không nắm rõ <strong>ý nghĩa cốt lõi</strong> của từng thao tác (ví dụ: thao tác đó mang lại
+                lợi ích gì trong việc cung cấp bằng chứng giải quyết khiếu nại).</li>
+            <li>Không hiểu rõ hoặc thiếu minh bạch về <strong>các rủi ro dẫn đến việc bị truy thu tài chính (đền
+                    bù)</strong>, dẫn đến tâm lý hoang mang hoặc mắc sai sót do thiếu hiểu biết.</li>
+        </ul>
+        <div class="section-content">🟢 Đề xuất cải thiện:</div>
+        <ul>
+            <li>Xây dựng một <strong>Cổng thông tin/Knowledge Base nội bộ</strong> quy tụ toàn bộ quy định, quy trình
+                được cập nhật mới nhất.</li>
+            <li>Trong mỗi quy trình, cần giải thích rõ "Tại sao phải làm thao tác này?" (mục đích bảo vệ nhân viên/công
+                ty khi có khiếu nại) và minh bạch hóa các lỗi vi phạm/rủi ro có thể dẫn đến việc nhân viên bị truy thu
+                tiền. Việc hiểu rõ luật chơi sẽ giúp nhân viên tự giác tuân thủ và hạn chế rủi ro cho cả cá nhân lẫn bưu
+                cục.</li>
+        </ul>
+    </div>
+
+    <div class="footer-note">
+        <p><em>* Cấu trúc bài khảo sát gồm 3 câu hỏi mở. Bạn có thể nhóm các Vấn đề 3, 4, 5, 6, 7 vào chung một nhóm
+                lớn: "Cải tiến Hệ thống Vận hành, Quy trình & Đào tạo cho NVXL" để điền vào hệ thống.</em></p>
+    </div>
+
+</body>
+
+</html>
