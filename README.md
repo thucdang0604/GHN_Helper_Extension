@@ -56,16 +56,23 @@ Dưới đây là các tính năng chính đã được tích hợp (hoạt đ�
 - ⚡ **Quét đơn tự động theo trạng thái (Auto Scan Status):** Áp dụng trên trang Kiểm ĐH về kho (`/lastmile/check-scan`), tự động quét và nhập hàng loạt các mã đơn theo nhóm trạng thái đã chọn (ĐH Đang Giao, ĐH Đang Trả, ĐH Chờ Trả,...). Có modal chọn trực quan, phím tắt `Alt + S`, nút nổi thao tác nhanh và thanh tiến trình quét thời gian thực kèm nút dừng lại bất cứ lúc nào.
 - 💰 **Lấy giá đơn hàng Trip-Detail (Trip Price Collector):** Tự động cào cột "Phải thu" và "GTB-thu" trên trang chi tiết chuyến đi (`/lastmile/trip-detail/`) và gửi cập nhật sang Google Sheet.
 - 📱 **Tra cứu Tên & SĐT Hàng Loạt (Bulk Receiver Info):** Tích hợp công cụ cho phép dán danh sách nhiều mã vận đơn cùng lúc, tự động gọi API `https://nhanh-api.ghn.vn/api/lastmile/order/search/receiver-info` để lấy Tên và SĐT người nhận, sau đó tự động điền vào đúng dòng tương ứng trên Google Sheet (hỗ trợ copy kết quả, xuất CSV, kiểm soát giãn cách request chống chặn IP).
+- 🔄 **Tự động kiểm tra cập nhật:** Nút bấm tích hợp ngay trong Popup, tự động so sánh phiên bản với GitHub Releases và cung cấp link tải bản mới nhất (.zip).
 - ⚙️ **Quản lý dạng Module:** Tất cả tính năng đều có thể bật/tắt (Toggle) độc lập theo ý muốn từ giao diện (Popup) của tiện ích.
+
+---
+
+## 🔄 Cách cập nhật khi có bản mới
+
+1. **Cách 1 (Từ giao diện Extension)**: Mở icon extension trên thanh công cụ ➔ Bấm **🔄 Kiểm tra cập nhật** ➔ Nếu có bản mới, bấm **⚡ Tải bản cập nhật (.zip)** ➔ Giải nén đè vào thư mục extension ➔ Vào `edge://extensions` hoặc `chrome://extensions` bấm **Reload**.
+2. **Cách 2 (File update.bat)**: Nhấp đúp chuột vào file `update.bat` trong thư mục extension để tự động kéo code mới nhất từ GitHub qua git.
+3. **Cách 3 (Trực tiếp từ GitHub)**: Truy cập [GHN_Helper_Extension Releases](https://github.com/thucdang0604/GHN_Helper_Extension/releases/latest) để tải bản phát hành mới nhất.
 
 ---
 
 ## ❓ Câu hỏi thường gặp
 
 - **LỖI**: Nếu tiện ích không chạy sau khi bật, hãy **F5 lại trang GHN** một lần để kết nối lại.
-- **CẬP NHẬT**: Khi có bản mới, giải nén đè lên thư mục cũ rồi vào trang Extensions nhấn 🔄 Reload là xong.
-- **XÓA**: Muốn gỡ: vào `chrome://extensions`, nhấn Remove trên thẻ tiện ích.
-- **EDGE**: Nếu dùng Microsoft Edge, các bước tương tự — Edge cũng hỗ trợ extension của Chrome.
+- **XÓA**: Muốn gỡ: vào `chrome://extensions` hoặc `edge://extensions`, nhấn Remove trên thẻ tiện ích.
 
 ---
-*GHN Helper Pro · Phiên bản 1.1 · Chỉ hoạt động trên ghn.vn*
+*GHN Helper Pro · Phiên bản 1.2 · Kho mã nguồn: [thucdang0604/GHN_Helper_Extension](https://github.com/thucdang0604/GHN_Helper_Extension)*
